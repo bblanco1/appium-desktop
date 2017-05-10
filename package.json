@@ -140,6 +140,8 @@
     "babel-preset-react-optimize": "1.x",
     "babel-preset-stage-0": "6.x",
     "babel-register": "6.x",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
     "concurrently": "3.x",
     "cross-env": "3.x",
     "css-loader": "0.x",

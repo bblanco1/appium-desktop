@@ -4,6 +4,7 @@ import { push } from 'react-router-redux';
 import { showError } from './Session';
 import UUID from 'uuid';
 import Promise from 'bluebird';
+import { getOptimalXPath } from '../util';
 
 export const SET_SOURCE_AND_SCREENSHOT = 'SET_SOURCE';
 export const SESSION_DONE = 'SESSION_DONE';
@@ -56,17 +57,20 @@ ipcRenderer.on('appium-client-command-response-error', (evt, resp) => {
   }
 });
 
+// Attributes on nodes that we know are unique to the node
+// TODO: Need to confirm this list
+const uniqueAttributes = [
+  'name',
+  'content-desc',
+  'id',
+  'accessibility-id',
+];
+
 /**
  * Translates sourceXML to JSON
  */
 function xmlToJSON (source) {
   let recursive = (xmlNode, parentPath, index) => {
-
-    // Get a dot separated path (root doesn't have a path)
-    let path = (index !== undefined) && `${!parentPath ? '' : parentPath + '.'}${index}`;
-
-    // Get an xpath for this element as well to use for Appium calls
-    let xpath = path && path.split('.').map((index) => `${path.length === 0 ? '/' : '//'}*[${parseInt(index, 10) + 1}]`).join('');
 
     // Translate attributes array to an object
     let attrObject = {};
@@ -74,12 +78,15 @@ function xmlToJSON (source) {
       attrObject[attribute.name] = attribute.value;
     }
 
+    // Dot Separated path of indices
+    let path = (index !== undefined) && `${!parentPath ? '' : parentPath + '.'}${index}`;
+
     return {
       children: [...xmlNode.children].map((childNode, childIndex) => recursive(childNode, path, childIndex)),
       tagName: xmlNode.tagName,
       attributes: attrObject,
+      xpath: getOptimalXPath(xmlNode, uniqueAttributes),
       path,
-      xpath,
     };
   };
 
